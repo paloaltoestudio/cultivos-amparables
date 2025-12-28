@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://visor.inn.com.co:8006';
+const BASE_URL = import.meta.env.VITE_AUTH_API_URL;
 
 export const authService = {
   async login(email, password) {

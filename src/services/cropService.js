@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://visor.inn.com.co:8009';
+const BASE_URL = import.meta.env.VITE_CROP_API_URL;
 
 export const cropService = {
   async validateCrop(latitude, longitude, cropCode, token) {
