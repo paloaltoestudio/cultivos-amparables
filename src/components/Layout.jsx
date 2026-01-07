@@ -16,56 +16,72 @@ function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-lg font-bold text-gray-800">Cultivos amparables</h1>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header - Full Width */}
+      <header className="px-6 py-4 flex justify-between items-center" style={{ backgroundColor: '#F7F8F2' }}>
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10">
+            <img src="/src/assets/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
+          </div>
+          <h1 className="text-lg font-bold" style={{ color: '#276399' }}>CULTIVOS AMPARABLES</h1>
         </div>
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => navigate('/nueva-solicitud')}
-                className={`w-full text-left px-4 py-2 rounded-md transition-colors ${
-                  isActive('/nueva-solicitud')
-                    ? 'bg-gray-200 text-gray-900 font-medium'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Nueva solicitud
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate('/mis-solicitudes')}
-                className={`w-full text-left px-4 py-2 rounded-md transition-colors ${
-                  isActive('/mis-solicitudes')
-                    ? 'bg-gray-200 text-gray-900 font-medium'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Mis solicitudes
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded-full border border-black text-black text-sm font-medium hover:bg-white hover:bg-opacity-50 transition-colors"
+          style={{ backgroundColor: '#F7F8F2' }}
+        >
+          Cerrar sesion
+        </button>
+      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-end">
-          <button
-            onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-800 text-sm font-medium"
-          >
-            Cerrar sesión
-          </button>
-        </header>
+      {/* Main Layout - Sidebar and Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-64 flex flex-col" style={{ backgroundColor: '#CFD1C5' }}>
+          <nav className="flex-1 p-4">
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className={`w-full text-left px-4 py-3 rounded-full transition-colors ${
+                    isActive('/dashboard')
+                      ? 'bg-white text-black font-medium'
+                      : 'bg-white text-black hover:bg-opacity-90'
+                  }`}
+                >
+                  Home
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('/nueva-solicitud')}
+                  className={`w-full text-left px-4 py-3 rounded-full transition-colors ${
+                    isActive('/nueva-solicitud')
+                      ? 'bg-white text-black font-medium'
+                      : 'bg-white text-black hover:bg-opacity-90'
+                  }`}
+                >
+                  Nueva solicitud
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('/mis-solicitudes')}
+                  className={`w-full text-left px-4 py-3 rounded-full transition-colors ${
+                    isActive('/mis-solicitudes')
+                      ? 'bg-white text-black font-medium'
+                      : 'bg-white text-black hover:bg-opacity-90'
+                  }`}
+                >
+                  Mis solicitudes
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </aside>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto bg-white">
           {children}
         </main>
       </div>

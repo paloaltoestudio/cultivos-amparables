@@ -29,62 +29,72 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-5">
-      <div className="bg-white rounded-xl shadow-2xl p-10 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-          Cultivos Amparables
+    <div className="min-h-screen flex flex-col items-center justify-center p-5 relative overflow-hidden" style={{ backgroundColor: '#F7F8F2' }}>
+      {/* Grid Pattern Background */}
+      <div className="absolute inset-0 opacity-10" style={{ 
+        backgroundImage: `
+          linear-gradient(#3DAF2D 1px, transparent 1px),
+          linear-gradient(90deg, #3DAF2D 1px, transparent 1px)
+        `,
+        backgroundSize: '40px 40px',
+        backgroundPosition: '0 0, 0 0',
+        maskImage: 'radial-gradient(ellipse 100% 50% at 50% 0%, black 40%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 100% 50% at 50% 0%, black 40%, transparent 100%)'
+      }}></div>
+
+      <div className="relative z-10 flex flex-col items-center w-full max-w-md">
+        {/* Logo */}
+        <div className="mb-2 relative">
+          <div className="relative w-20 h-20 mx-auto">
+            <img src="/src/assets/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
+          </div>
+        </div>
+
+        {/* Title */}
+        <h1 className="text-m font-bold mb-8 text-center" style={{ color: '#276399' }}>
+          CULTIVOS AMPARABLES
         </h1>
-        <h2 className="text-xl font-medium text-gray-600 mb-8 text-center">
-          Iniciar Sesión
-        </h2>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
-              {error}
-            </div>
-          )}
-          
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Correo Electrónico
-            </label>
+
+        {/* Login Form Card */}
+        <div className="bg-white rounded-xl shadow-lg p-8 w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-full text-sm border border-red-200">
+                {error}
+              </div>
+            )}
+            
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Ingrese su correo electrónico"
+              placeholder="Email"
               disabled={loading}
-              className="px-4 py-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="px-4 py-3 border border-gray-300 rounded-full text-base transition-colors focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Contraseña
-            </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Ingrese su contraseña"
+              placeholder="Contraseña"
               disabled={loading}
-              className="px-4 py-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="px-4 py-3 border border-gray-300 rounded-full text-base transition-colors focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
-          </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="mt-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg text-base font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="mt-2 px-6 py-3 bg-gray-800 text-white rounded-full text-base font-bold transition-all hover:bg-gray-700 active:bg-gray-900 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Ingresando...' : 'INGRESAR'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
