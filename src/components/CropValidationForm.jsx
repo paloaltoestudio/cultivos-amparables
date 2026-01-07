@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function CropValidationForm({ 
   onSubmit, 
@@ -25,42 +25,11 @@ function CropValidationForm({
   const [longSeconds, setLongSeconds] = useState('');
   const [longDirection, setLongDirection] = useState('E');
 
-  // Update form when external coordinates change (from map)
-  useEffect(() => {
-    if (externalLatitude && externalLongitude) {
-      if (coordinateFormat === 'decimal') {
-        setLatitude(externalLatitude.toString());
-        setLongitude(externalLongitude.toString());
-      } else {
-        // Convert decimal to DMS
-        const latDMS = decimalToDMS(Math.abs(externalLatitude));
-        const lngDMS = decimalToDMS(Math.abs(externalLongitude));
-        
-        setLatDegrees(latDMS.degrees.toString());
-        setLatMinutes(latDMS.minutes.toString());
-        setLatSeconds(latDMS.seconds.toFixed(2));
-        setLatDirection(externalLatitude >= 0 ? 'N' : 'S');
-        
-        setLongDegrees(lngDMS.degrees.toString());
-        setLongMinutes(lngDMS.minutes.toString());
-        setLongSeconds(lngDMS.seconds.toFixed(2));
-        setLongDirection(externalLongitude >= 0 ? 'E' : 'W');
-      }
-    }
-  }, [externalLatitude, externalLongitude, coordinateFormat]);
-
-  // Update map when DMS values change
-  useEffect(() => {
-    if (coordinateFormat === 'dms' && onCoordinatesChange) {
-      if (latDegrees && latMinutes && latSeconds && longDegrees && longMinutes && longSeconds) {
-        const lat = dmsToDecimal(latDegrees, latMinutes, latSeconds, latDirection);
-        const lng = dmsToDecimal(longDegrees, longMinutes, longSeconds, longDirection);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          onCoordinatesChange(lat, lng);
-        }
-      }
-    }
-  }, [latDegrees, latMinutes, latSeconds, latDirection, longDegrees, longMinutes, longSeconds, longDirection, coordinateFormat, onCoordinatesChange]);
+  // Ref to track last external coordinates to detect changes
+  const lastExternalLat = useRef(null);
+  const lastExternalLng = useRef(null);
+  // Ref to prevent loop when updating from external source
+  const isUpdatingFromExternal = useRef(false);
 
   // Convert DMS to decimal degrees
   const dmsToDecimal = (degrees, minutes, seconds, direction) => {
@@ -79,13 +48,81 @@ function CropValidationForm({
 
   // Convert decimal to DMS
   const decimalToDMS = (decimal) => {
-    const deg = Math.floor(decimal);
-    const minFloat = (decimal - deg) * 60;
+    const deg = Math.floor(Math.abs(decimal));
+    const minFloat = (Math.abs(decimal) - deg) * 60;
     const min = Math.floor(minFloat);
     const sec = (minFloat - min) * 60;
     
     return { degrees: deg, minutes: min, seconds: sec };
   };
+
+  // Update form when external coordinates change (from map)
+  useEffect(() => {
+    // Only update if coordinates actually changed
+    if (externalLatitude && externalLongitude) {
+      const latChanged = lastExternalLat.current !== externalLatitude;
+      const lngChanged = lastExternalLng.current !== externalLongitude;
+      
+      if (latChanged || lngChanged) {
+        isUpdatingFromExternal.current = true;
+        lastExternalLat.current = externalLatitude;
+        lastExternalLng.current = externalLongitude;
+        
+        if (coordinateFormat === 'decimal') {
+          setLatitude(externalLatitude.toString());
+          setLongitude(externalLongitude.toString());
+        } else {
+          // Convert decimal to DMS
+          const latDMS = decimalToDMS(externalLatitude);
+          const lngDMS = decimalToDMS(externalLongitude);
+          
+          setLatDegrees(latDMS.degrees.toString());
+          setLatMinutes(latDMS.minutes.toString());
+          setLatSeconds(latDMS.seconds.toFixed(2));
+          setLatDirection(externalLatitude >= 0 ? 'N' : 'S');
+          
+          setLongDegrees(lngDMS.degrees.toString());
+          setLongMinutes(lngDMS.minutes.toString());
+          setLongSeconds(lngDMS.seconds.toFixed(2));
+          setLongDirection(externalLongitude >= 0 ? 'E' : 'W');
+        }
+        
+        // Reset flag after state updates complete
+        setTimeout(() => {
+          isUpdatingFromExternal.current = false;
+        }, 50);
+      }
+    }
+  }, [externalLatitude, externalLongitude, coordinateFormat]);
+
+  // Update map when DMS values change (only if user manually changed them, not from map update)
+  useEffect(() => {
+    // Skip if updating from external source or not in DMS format
+    if (isUpdatingFromExternal.current || coordinateFormat !== 'dms' || !onCoordinatesChange) {
+      return;
+    }
+    
+    if (latDegrees && latMinutes && latSeconds && longDegrees && longMinutes && longSeconds) {
+      const lat = dmsToDecimal(latDegrees, latMinutes, latSeconds, latDirection);
+      const lng = dmsToDecimal(longDegrees, longMinutes, longSeconds, longDirection);
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        // Only update map if the converted DMS values are significantly different from external coordinates
+        // This means the user manually typed in the DMS fields
+        if (externalLatitude && externalLongitude) {
+          const latDiff = Math.abs(lat - parseFloat(externalLatitude)) > 0.0001;
+          const lngDiff = Math.abs(lng - parseFloat(externalLongitude)) > 0.0001;
+          // Only call onCoordinatesChange if values are different (user manually typed)
+          if (latDiff || lngDiff) {
+            onCoordinatesChange(lat, lng);
+          }
+        } else {
+          // No external coordinates yet, safe to update (user is typing initial values)
+          onCoordinatesChange(lat, lng);
+        }
+      }
+    }
+  }, [latDegrees, latMinutes, latSeconds, latDirection, longDegrees, longMinutes, longSeconds, longDirection, coordinateFormat, onCoordinatesChange, externalLatitude, externalLongitude]);
 
   const clearForm = () => {
     if (coordinateFormat === 'dms') {
@@ -199,7 +236,47 @@ function CropValidationForm({
   };
 
   const handleFormatToggle = () => {
-    setCoordinateFormat(coordinateFormat === 'decimal' ? 'dms' : 'decimal');
+    const newFormat = coordinateFormat === 'decimal' ? 'dms' : 'decimal';
+    
+    // Convert current coordinates to the new format
+    if (newFormat === 'dms') {
+      // Converting from decimal to DMS
+      if (latitude && longitude) {
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          isUpdatingFromExternal.current = true;
+          const latDMS = decimalToDMS(lat);
+          const lngDMS = decimalToDMS(lng);
+          
+          setLatDegrees(latDMS.degrees.toString());
+          setLatMinutes(latDMS.minutes.toString());
+          setLatSeconds(latDMS.seconds.toFixed(2));
+          setLatDirection(lat >= 0 ? 'N' : 'S');
+          
+          setLongDegrees(lngDMS.degrees.toString());
+          setLongMinutes(lngDMS.minutes.toString());
+          setLongSeconds(lngDMS.seconds.toFixed(2));
+          setLongDirection(lng >= 0 ? 'E' : 'W');
+          
+          setTimeout(() => {
+            isUpdatingFromExternal.current = false;
+          }, 50);
+        }
+      }
+    } else {
+      // Converting from DMS to decimal
+      if (latDegrees && latMinutes && latSeconds && longDegrees && longMinutes && longSeconds) {
+        const lat = dmsToDecimal(latDegrees, latMinutes, latSeconds, latDirection);
+        const lng = dmsToDecimal(longDegrees, longMinutes, longSeconds, longDirection);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setLatitude(lat.toString());
+          setLongitude(lng.toString());
+        }
+      }
+    }
+    
+    setCoordinateFormat(newFormat);
     setError('');
     if (onErrorChange) {
       onErrorChange('');

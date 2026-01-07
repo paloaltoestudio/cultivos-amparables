@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const containerStyle = {
@@ -19,7 +19,12 @@ function GoogleMapComponent({
   onMapClick,
   apiKey 
 }) {
+  // All hooks must be declared before any conditional returns
   const mapRef = useRef(null);
+  const [mapCenter, setMapCenter] = useState(defaultCenter);
+  const [markerPosition, setMarkerPosition] = useState(null);
+  const lastLatRef = useRef(null);
+  const lastLngRef = useRef(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -50,6 +55,40 @@ function GoogleMapComponent({
     }
   }, [onMapClick]);
 
+  // Update center and marker position only when coordinates actually change
+  useEffect(() => {
+    if (latitude && longitude) {
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        // Only update if coordinates actually changed
+        const latChanged = lastLatRef.current !== lat;
+        const lngChanged = lastLngRef.current !== lng;
+        
+        if (latChanged || lngChanged) {
+          lastLatRef.current = lat;
+          lastLngRef.current = lng;
+          
+          const newCenter = { lat, lng };
+          const newMarker = { lat, lng };
+          
+          setMapCenter(newCenter);
+          setMarkerPosition(newMarker);
+        }
+      }
+    } else {
+      if (lastLatRef.current !== null || lastLngRef.current !== null) {
+        lastLatRef.current = null;
+        lastLngRef.current = null;
+        setMapCenter(defaultCenter);
+        setMarkerPosition(null);
+      }
+    }
+  }, [latitude, longitude]);
+
+  const hasMarker = markerPosition !== null;
+
   if (!isLoaded) {
     return (
       <div className="bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center min-h-[400px]">
@@ -60,17 +99,11 @@ function GoogleMapComponent({
     );
   }
 
-  const center = latitude && longitude 
-    ? { lat: parseFloat(latitude), lng: parseFloat(longitude) }
-    : defaultCenter;
-
-  const hasMarker = latitude && longitude && !isNaN(parseFloat(latitude)) && !isNaN(parseFloat(longitude));
-
   return (
     <div className="bg-gray-100 rounded-lg border border-gray-300 overflow-hidden min-h-[400px]">
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={center}
+        center={mapCenter}
         zoom={hasMarker ? 15 : 6}
         onLoad={onLoad}
         onUnmount={onUnmount}
@@ -81,9 +114,9 @@ function GoogleMapComponent({
           fullscreenControl: false,
         }}
       >
-        {hasMarker && (
+        {hasMarker && markerPosition && (
           <Marker
-            position={{ lat: parseFloat(latitude), lng: parseFloat(longitude) }}
+            position={markerPosition}
             draggable={true}
             onDragEnd={handleDragEnd}
           />
