@@ -21,7 +21,7 @@ function Layout({ children }) {
       <header className="px-6 py-4 flex justify-between items-center" style={{ backgroundColor: '#F7F8F2' }}>
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10">
-            <img src="/src/assets/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-lg font-bold" style={{ color: '#276399' }}>CULTIVOS AMPARABLES</h1>
         </div>

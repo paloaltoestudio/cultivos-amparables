@@ -46,7 +46,7 @@ function Login() {
         {/* Logo */}
         <div className="mb-2 relative">
           <div className="relative w-20 h-20 mx-auto">
-            <img src="/src/assets/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/inn_logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
         </div>
 
