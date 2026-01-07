@@ -3,13 +3,13 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_CROP_API_URL;
 
 export const cropService = {
-  async validateCrop(latitude, longitude, cropCode, token, solicitudId = null) {
+  async validateCrop(latitude, longitude, cropCode, token, solicitudId = null, descriptor = 'Test') {
     try {
       const requestBody = {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         crop_code: parseInt(cropCode),
-        descriptor: 'Test',
+        descriptor: descriptor || 'Test',
       };
 
       // If solicitudId is provided, add it to the request to add validation to existing solicitud
@@ -121,6 +121,100 @@ export const cropService = {
         return {
           success: false,
           error: error.message || 'Error al procesar el archivo',
+        };
+      }
+    }
+  },
+
+  async searchValidations(solicitudId, token) {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/application/search-validations?token=${encodeURIComponent(token)}`,
+        {
+          solicitud_id: solicitudId,
+        }
+      );
+
+      if (response.data.status === 'success' && response.data.data) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Respuesta inesperada del servidor',
+        };
+      }
+    } catch (error) {
+      if (error.response) {
+        const errorData = error.response.data;
+        let errorMessage;
+        if (Array.isArray(errorData)) {
+          errorMessage = errorData.map(err => err.msg || JSON.stringify(err)).join(', ');
+        } else {
+          errorMessage = errorData.detail || errorData.message || 'Error al buscar validaciones';
+        }
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      } else if (error.request) {
+        return {
+          success: false,
+          error: 'Error de red. Por favor, intente nuevamente.',
+        };
+      } else {
+        return {
+          success: false,
+          error: error.message || 'Error al buscar validaciones',
+        };
+      }
+    }
+  },
+
+  async searchApplications(userId, token) {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/application/search-applications?token=${encodeURIComponent(token)}`,
+        {
+          usuario_id: userId,
+        }
+      );
+
+      if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Respuesta inesperada del servidor',
+        };
+      }
+    } catch (error) {
+      if (error.response) {
+        const errorData = error.response.data;
+        let errorMessage;
+        if (Array.isArray(errorData)) {
+          errorMessage = errorData.map(err => err.msg || JSON.stringify(err)).join(', ');
+        } else {
+          errorMessage = errorData.detail || errorData.message || 'Error al buscar solicitudes';
+        }
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      } else if (error.request) {
+        return {
+          success: false,
+          error: 'Error de red. Por favor, intente nuevamente.',
+        };
+      } else {
+        return {
+          success: false,
+          error: error.message || 'Error al buscar solicitudes',
         };
       }
     }

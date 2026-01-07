@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NuevaSolicitud from './pages/NuevaSolicitud';
+import VerSolicitud from './pages/VerSolicitud';
 import MisSolicitudes from './pages/MisSolicitudes';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -38,6 +39,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <MisSolicitudes />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitud/:solicitudId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <VerSolicitud />
               </Layout>
             </ProtectedRoute>
           }
