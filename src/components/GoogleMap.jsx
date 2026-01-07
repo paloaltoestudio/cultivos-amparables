@@ -25,6 +25,8 @@ function GoogleMapComponent({
   const [markerPosition, setMarkerPosition] = useState(null);
   const lastLatRef = useRef(null);
   const lastLngRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const isMapClickRef = useRef(false);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -43,7 +45,17 @@ function GoogleMapComponent({
     if (onMarkerDragEnd) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
+      // Update marker position immediately without recentering
+      setMarkerPosition({ lat, lng });
+      lastLatRef.current = lat;
+      lastLngRef.current = lng;
+      // Mark that we're updating from a drag
+      isDraggingRef.current = true;
       onMarkerDragEnd(lat, lng);
+      // Reset drag flag after a short delay
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 100);
     }
   }, [onMarkerDragEnd]);
 
@@ -51,11 +63,22 @@ function GoogleMapComponent({
     if (onMapClick) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
+      // Update marker position immediately without recentering
+      setMarkerPosition({ lat, lng });
+      lastLatRef.current = lat;
+      lastLngRef.current = lng;
+      // Mark that we're updating from a map click
+      isMapClickRef.current = true;
       onMapClick(lat, lng);
+      // Reset map click flag after a short delay
+      setTimeout(() => {
+        isMapClickRef.current = false;
+      }, 100);
     }
   }, [onMapClick]);
 
   // Update center and marker position only when coordinates actually change
+  // Don't recenter if the change came from a marker drag
   useEffect(() => {
     if (latitude && longitude) {
       const lat = parseFloat(latitude);
@@ -70,10 +93,15 @@ function GoogleMapComponent({
           lastLatRef.current = lat;
           lastLngRef.current = lng;
           
-          const newCenter = { lat, lng };
           const newMarker = { lat, lng };
           
-          setMapCenter(newCenter);
+          // Only update map center if the change didn't come from a drag or map click
+          if (!isDraggingRef.current && !isMapClickRef.current) {
+            const newCenter = { lat, lng };
+            setMapCenter(newCenter);
+          }
+          
+          // Always update marker position
           setMarkerPosition(newMarker);
         }
       }
@@ -112,6 +140,7 @@ function GoogleMapComponent({
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
+          mapTypeId: 'hybrid',
         }}
       >
         {hasMarker && markerPosition && (
