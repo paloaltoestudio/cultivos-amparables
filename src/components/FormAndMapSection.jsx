@@ -2,7 +2,7 @@ import { forwardRef, useState } from 'react';
 import CropValidationForm from './CropValidationForm';
 import GoogleMapComponent from './GoogleMap';
 
-const FormAndMapSection = forwardRef(({ onSubmit, loading, error, onErrorChange }, ref) => {
+const FormAndMapSection = forwardRef(({ onSubmit, loading, error, onErrorChange, token }, ref) => {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
 
@@ -34,6 +34,7 @@ const FormAndMapSection = forwardRef(({ onSubmit, loading, error, onErrorChange 
         latitude={latitude}
         longitude={longitude}
         onCoordinatesChange={handleCoordinatesChange}
+        token={token}
       />
 
       {/* Right: Map */}

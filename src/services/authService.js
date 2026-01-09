@@ -17,6 +17,7 @@ export const authService = {
           success: true,
           token: data.Token,
           userId: data.id,
+          nombre: data.nombre || '',
         };
       } else {
         return {

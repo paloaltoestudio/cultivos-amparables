@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import Select from 'react-select';
+import { catalogService, CATALOG_IDS } from '../services/catalogService';
 
 function CropValidationForm({ 
   onSubmit, 
@@ -7,13 +9,17 @@ function CropValidationForm({
   onErrorChange,
   latitude: externalLatitude = '',
   longitude: externalLongitude = '',
-  onCoordinatesChange
+  onCoordinatesChange,
+  token
 }) {
   const [coordinateFormat, setCoordinateFormat] = useState('decimal');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [cropCode, setCropCode] = useState('');
   const [error, setError] = useState('');
+  const [crops, setCrops] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [catalogError, setCatalogError] = useState('');
   
   // DMS state
   const [latDegrees, setLatDegrees] = useState('');
@@ -123,6 +129,35 @@ function CropValidationForm({
       }
     }
   }, [latDegrees, latMinutes, latSeconds, latDirection, longDegrees, longMinutes, longSeconds, longDirection, coordinateFormat, onCoordinatesChange, externalLatitude, externalLongitude]);
+
+  // Fetch crop catalog on mount
+  useEffect(() => {
+    const fetchCropCatalog = async () => {
+      if (!token) {
+        setLoadingCatalog(false);
+        return;
+      }
+
+      setLoadingCatalog(true);
+      setCatalogError('');
+
+      const response = await catalogService.getCatalog(CATALOG_IDS.CROP, token);
+
+      if (response.success && response.data) {
+        // Sort crops by code for better UX
+        const sortedCrops = [...response.data].sort((a, b) => a.codigo - b.codigo);
+        setCrops(sortedCrops);
+      } else {
+        setCatalogError(response.error || 'Error al cargar el catálogo de cultivos');
+        // Still allow form submission even if catalog fails to load
+        setCrops([]);
+      }
+
+      setLoadingCatalog(false);
+    };
+
+    fetchCropCatalog();
+  }, [token]);
 
   const clearForm = () => {
     if (coordinateFormat === 'dms') {
@@ -497,19 +532,109 @@ function CropValidationForm({
             <label htmlFor="cropCode" className="block text-sm font-medium text-gray-700 mb-1">
               Código del Cultivo
             </label>
-            <input
-              id="cropCode"
-              type="number"
-              value={cropCode}
-              onChange={(e) => setCropCode(e.target.value)}
-              required
-              placeholder="Código del Cultivo"
-              disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-full text-base focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-              style={{ '--tw-ring-color': '#3DAF2D' }}
-              onFocus={(e) => e.target.style.borderColor = '#3DAF2D'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
+            {loadingCatalog ? (
+              <div className="w-full px-4 py-2 border border-gray-300 rounded-full text-base bg-gray-100 text-gray-500 flex items-center justify-center">
+                Cargando cultivos...
+              </div>
+            ) : catalogError ? (
+              <div className="w-full px-4 py-2 border border-red-300 rounded-full text-base bg-red-50 text-red-600 text-sm">
+                {catalogError}
+              </div>
+            ) : (
+              <Select
+                id="cropCode"
+                value={crops.find(crop => crop.codigo.toString() === cropCode) ? {
+                  value: cropCode,
+                  label: crops.find(crop => crop.codigo.toString() === cropCode)?.cultivo || ''
+                } : null}
+                onChange={(selectedOption) => {
+                  setCropCode(selectedOption ? selectedOption.value.toString() : '');
+                }}
+                options={crops.map(crop => ({
+                  value: crop.codigo.toString(),
+                  label: crop.cultivo
+                }))}
+                placeholder="Seleccione un cultivo"
+                isSearchable={true}
+                isClearable={false}
+                isDisabled={loading || crops.length === 0}
+                noOptionsMessage={({ inputValue }) => 
+                  inputValue ? `No se encontró "${inputValue}"` : 'No hay cultivos disponibles'
+                }
+                loadingMessage={() => 'Cargando...'}
+                styles={{
+                  control: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderRadius: '9999px',
+                    borderColor: state.isFocused ? '#3DAF2D' : '#d1d5db',
+                    borderWidth: '1px',
+                    padding: '2px 4px',
+                    minHeight: '42px',
+                    boxShadow: state.isFocused ? '0 0 0 1px #3DAF2D' : 'none',
+                    '&:hover': {
+                      borderColor: state.isFocused ? '#3DAF2D' : '#d1d5db',
+                    },
+                    backgroundColor: state.isDisabled ? '#f3f4f6' : 'white',
+                    cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+                  }),
+                  menu: (baseStyles) => ({
+                    ...baseStyles,
+                    borderRadius: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }),
+                  menuList: (baseStyles) => ({
+                    ...baseStyles,
+                    padding: '4px',
+                  }),
+                  option: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderRadius: '0.375rem',
+                    backgroundColor: state.isSelected
+                      ? '#3DAF2D'
+                      : state.isFocused
+                      ? '#f0fdf4'
+                      : 'white',
+                    color: state.isSelected ? 'white' : '#1f2937',
+                    cursor: 'pointer',
+                    padding: '8px 12px',
+                    '&:active': {
+                      backgroundColor: '#3DAF2D',
+                      color: 'white',
+                    },
+                  }),
+                  input: (baseStyles) => ({
+                    ...baseStyles,
+                    fontSize: '1rem',
+                  }),
+                  placeholder: (baseStyles) => ({
+                    ...baseStyles,
+                    color: '#9ca3af',
+                    fontSize: '1rem',
+                  }),
+                  singleValue: (baseStyles) => ({
+                    ...baseStyles,
+                    fontSize: '1rem',
+                    color: '#1f2937',
+                  }),
+                  indicatorSeparator: () => ({
+                    display: 'none',
+                  }),
+                  dropdownIndicator: (baseStyles, state) => ({
+                    ...baseStyles,
+                    color: '#9ca3af',
+                    padding: '4px',
+                    transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s',
+                  }),
+                }}
+              />
+            )}
+            {!loadingCatalog && crops.length === 0 && !catalogError && (
+              <p className="mt-1 text-xs text-gray-500">
+                No hay cultivos disponibles. Verifique su conexión.
+              </p>
+            )}
           </div>
 
           {/* Toggle Button */}

@@ -126,12 +126,14 @@ export const cropService = {
     }
   },
 
-  async searchValidations(solicitudId, token) {
+  async searchValidations(solicitudId, token, page = 1, limit = 10) {
     try {
       const response = await axios.post(
         `${BASE_URL}/application/search-validations?token=${encodeURIComponent(token)}`,
         {
           solicitud_id: solicitudId,
+          page: page,
+          limit: limit,
         }
       );
 
@@ -139,6 +141,7 @@ export const cropService = {
         return {
           success: true,
           data: response.data.data,
+          pagination: response.data.pagination || null,
         };
       } else {
         return {
@@ -173,12 +176,14 @@ export const cropService = {
     }
   },
 
-  async searchApplications(userId, token) {
+  async searchApplications(userId, token, page = 1, limit = 10) {
     try {
       const response = await axios.post(
         `${BASE_URL}/application/search-applications?token=${encodeURIComponent(token)}`,
         {
           usuario_id: userId,
+          page: page,
+          limit: limit,
         }
       );
 
@@ -186,6 +191,7 @@ export const cropService = {
         return {
           success: true,
           data: response.data.data,
+          pagination: response.data.pagination || null,
         };
       } else {
         return {

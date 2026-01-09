@@ -6,11 +6,12 @@ const useAuthStore = create(
     (set) => ({
       token: null,
       userId: null,
-      login: (token, userId) => {
-        set({ token, userId });
+      nombre: null,
+      login: (token, userId, nombre) => {
+        set({ token, userId, nombre });
       },
       logout: () => {
-        set({ token: null, userId: null });
+        set({ token: null, userId: null, nombre: null });
       },
     }),
     {

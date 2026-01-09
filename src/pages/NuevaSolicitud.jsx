@@ -124,13 +124,14 @@ function NuevaSolicitud() {
       </div>
 
       {/* Form and Map Section */}
-      <FormAndMapSection
-        ref={formRef}
-        onSubmit={handleFormSubmit}
-        loading={loading}
-        error={error}
-        onErrorChange={setError}
-      />
+            <FormAndMapSection
+              ref={formRef}
+              onSubmit={handleFormSubmit}
+              loading={loading}
+              error={error}
+              onErrorChange={setError}
+              token={token}
+            />
 
       {/* Massive Upload Section */}
       <MassiveUploadSection
