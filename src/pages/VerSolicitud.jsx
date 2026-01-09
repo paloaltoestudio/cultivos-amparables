@@ -119,13 +119,13 @@ function VerSolicitud() {
 
   if (initialLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
+      <div className="p-4 sm:p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
+          <div className="relative w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4">
             <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-green-600 rounded-full border-t-transparent animate-spin"></div>
           </div>
-          <p className="text-gray-600">Cargando solicitud...</p>
+          <p className="text-sm sm:text-base text-gray-600">Cargando solicitud...</p>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ function VerSolicitud() {
 
   if (error && validations.length === 0) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
           {error}
         </div>
@@ -148,12 +148,12 @@ function VerSolicitud() {
   }
 
   return (
-    <div className="p-8 relative">
+    <div className="p-4 sm:p-6 lg:p-8 relative">
       {/* Loading Overlay */}
       <LoadingOverlay show={loading} />
 
       {/* Breadcrumbs */}
-      <div className="mb-4 text-sm" style={{ color: '#666666' }}>
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm" style={{ color: '#666666' }}>
         <span>Home / </span>
         <span className="font-bold">Ver solicitud</span>
       </div>
@@ -161,18 +161,18 @@ function VerSolicitud() {
       
 
       {/* Title */}
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold" style={{ color: '#3DAF2D' }}>
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#3DAF2D' }}>
           {validations.length > 0 && validations[0].descriptor 
             ? validations[0].descriptor 
             : `Solicitud ${solicitudId?.substring(0, 8) || 'N/A'}`}
         </h1>
         <button
           onClick={() => navigate('/mis-solicitudes')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors text-sm"
         >
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -184,7 +184,7 @@ function VerSolicitud() {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span className="text-sm font-medium">Volver al listado</span>
+          <span className="text-xs sm:text-sm font-medium">Volver al listado</span>
         </button>
       </div>
 
@@ -211,7 +211,7 @@ function VerSolicitud() {
       {/* Results Section */}
       {validations.length > 0 && (
         <div ref={resultsRef} className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Resultados</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Resultados</h2>
           
           <div className="space-y-3">
             {validations.map((validation, index) => {
@@ -301,11 +301,11 @@ function VerSolicitud() {
 
           {/* Pagination Controls */}
           {pagination.total_pages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-600">
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+              <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                 Mostrando {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, pagination.total)} de {pagination.total} validaciones
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || loading}

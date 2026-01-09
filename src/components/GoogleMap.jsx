@@ -1,7 +1,14 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
-const containerStyle = {
+const getContainerStyle = () => ({
+  width: '100%',
+  height: '300px', // Default mobile height
+  borderRadius: '0.5rem',
+});
+
+// For desktop, we'll use CSS to override
+const containerStyleDesktop = {
   width: '100%',
   height: '400px',
   borderRadius: '0.5rem',
@@ -23,10 +30,23 @@ function GoogleMapComponent({
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [markerPosition, setMarkerPosition] = useState(null);
+  const [mapHeight, setMapHeight] = useState('300px');
   const lastLatRef = useRef(null);
   const lastLngRef = useRef(null);
   const isDraggingRef = useRef(false);
   const isMapClickRef = useRef(false);
+
+  // Handle responsive map height
+  useEffect(() => {
+    const updateMapHeight = () => {
+      setMapHeight(window.innerWidth >= 640 ? '400px' : '300px');
+    };
+    
+    updateMapHeight();
+    window.addEventListener('resize', updateMapHeight);
+    
+    return () => window.removeEventListener('resize', updateMapHeight);
+  }, []);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -119,7 +139,7 @@ function GoogleMapComponent({
 
   if (!isLoaded) {
     return (
-      <div className="bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center min-h-[400px]">
+      <div className="bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
         <div className="text-center text-gray-500">
           <p className="text-sm">Cargando mapa...</p>
         </div>
@@ -128,9 +148,13 @@ function GoogleMapComponent({
   }
 
   return (
-    <div className="bg-gray-100 rounded-lg border border-gray-300 overflow-hidden min-h-[400px]">
+    <div className="bg-gray-100 rounded-lg border border-gray-300 overflow-hidden min-h-[300px] sm:min-h-[400px]">
       <GoogleMap
-        mapContainerStyle={containerStyle}
+        mapContainerStyle={{
+          width: '100%',
+          height: mapHeight,
+          borderRadius: '0.5rem',
+        }}
         center={mapCenter}
         zoom={hasMarker ? 15 : 6}
         onLoad={onLoad}

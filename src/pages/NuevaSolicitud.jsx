@@ -91,20 +91,20 @@ function NuevaSolicitud() {
   };
 
   return (
-    <div className="p-8 relative">
+    <div className="p-4 sm:p-6 lg:p-8 relative">
       {/* Loading Overlay */}
       <LoadingOverlay show={loading} />
 
       {/* Breadcrumbs */}
-      <div className="mb-4 text-sm" style={{ color: '#666666' }}>
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm" style={{ color: '#666666' }}>
         <span>Home / </span>
         <span className="font-bold">Nueva solicitud</span>
       </div>
 
       {/* Title */}
-      <div className="mb-6 flex items-center gap-2">
+      <div className="mb-4 sm:mb-6 flex items-center gap-2">
         {isDescriptorLocked ? (
-          <h1 className="text-3xl font-bold" style={{ color: '#3DAF2D' }}>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#3DAF2D' }}>
             {descriptor || 'Nueva solicitud'}
           </h1>
         ) : (
@@ -114,7 +114,7 @@ function NuevaSolicitud() {
               value={descriptor}
               onChange={(e) => setDescriptor(e.target.value)}
               placeholder="Nombre de la solicitud"
-              className="text-3xl font-bold bg-transparent border-b-2 border-gray-300 outline-none flex-1 px-2 pb-1 focus:border-green-500 transition-colors"
+              className="text-xl sm:text-2xl lg:text-3xl font-bold bg-transparent border-b-2 border-gray-300 outline-none flex-1 px-2 pb-1 focus:border-green-500 transition-colors"
               style={{ 
                 color: '#3DAF2D',
               }}
@@ -140,9 +140,9 @@ function NuevaSolicitud() {
       />
 
       {/* Results Section */}
-      {validations.length > 0 && (
-        <div ref={resultsRef} className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Resultados</h2>
+             {validations.length > 0 && (
+               <div ref={resultsRef} className="mb-6">
+                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Resultados</h2>
           
           <div className="space-y-3">
             {validations.map((validation, index) => (

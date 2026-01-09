@@ -24,7 +24,7 @@ const FormAndMapSection = forwardRef(({ onSubmit, loading, error, onErrorChange,
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
   return (
-    <div ref={ref} className="grid grid-cols-2 gap-6 mb-6">
+    <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       {/* Left: Form */}
       <CropValidationForm
         onSubmit={onSubmit}

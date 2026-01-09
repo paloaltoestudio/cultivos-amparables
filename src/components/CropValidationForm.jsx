@@ -411,7 +411,7 @@ function CropValidationForm({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Latitud (Grados, Minutos, Segundos)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <input
                     type="number"
                     value={latDegrees}
@@ -470,7 +470,7 @@ function CropValidationForm({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Longitud (Grados, Minutos, Segundos)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <input
                     type="number"
                     value={longDegrees}

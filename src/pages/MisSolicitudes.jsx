@@ -97,16 +97,16 @@ function MisSolicitudes() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Breadcrumbs */}
-      <div className="mb-4 text-sm" style={{ color: '#666666' }}>
+      <div className="mb-3 sm:mb-4 text-xs sm:text-sm" style={{ color: '#666666' }}>
         <span>Home / </span>
         <span className="font-bold">Mis solicitudes</span>
       </div>
 
       {/* Title */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold" style={{ color: '#3DAF2D' }}>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#3DAF2D' }}>
           Mis solicitudes
         </h1>
       </div>
@@ -123,51 +123,50 @@ function MisSolicitudes() {
         <>
           <div className="space-y-3">
             {applications.map((application) => (
-              <div
-                key={application.id}
-                onClick={() => handleApplicationClick(application.id)}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      {application.descriptor || `Solicitud #${application.consecutivo}`}
-                    </h3>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      
-                      <div>
-                        <span className="font-medium">Creado:</span> {formatDate(application.creado)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Creado por:</span> {parseCreatedBy(application.creado_por)}
-                      </div>
+            <div
+              key={application.id}
+              onClick={() => handleApplicationClick(application.id)}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all"
+            >
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 break-words">
+                    {application.descriptor || `Solicitud #${application.consecutivo}`}
+                  </h3>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Creado:</span> <span className="break-words">{formatDate(application.creado)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Creado por:</span> <span className="break-words">{parseCreatedBy(application.creado_por)}</span>
                     </div>
                   </div>
-                  <svg
-                    className="w-5 h-5 text-gray-400 ml-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
                 </div>
+                <svg
+                  className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </div>
+            </div>
             ))}
           </div>
 
           {/* Pagination Controls */}
           {pagination.total_pages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-600">
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+              <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                 Mostrando {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, pagination.total)} de {pagination.total} solicitudes
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || loading}
