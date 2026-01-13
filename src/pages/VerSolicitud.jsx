@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import FormAndMapSection from '../components/FormAndMapSection';
 import LoadingOverlay from '../components/LoadingOverlay';
 import MassiveUploadSection from '../components/MassiveUploadSection';
+import { useValidationScroll } from '../hooks/useValidationScroll';
 
 function VerSolicitud() {
   const { solicitudId } = useParams();
@@ -12,6 +13,7 @@ function VerSolicitud() {
   const { token } = useAuthStore((state) => ({ token: state.token }));
   const formRef = useRef(null);
   const resultsRef = useRef(null);
+  const { scrollToLatestValidation, getValidationRef } = useValidationScroll();
   
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ function VerSolicitud() {
   });
 
   const loadValidations = useCallback(async (page = 1, isInitialLoad = false) => {
-    if (!solicitudId || !token) return;
+    if (!solicitudId || !token) return null;
     
     if (isInitialLoad) {
       setInitialLoading(true);
@@ -38,21 +40,32 @@ function VerSolicitud() {
     const response = await cropService.searchValidations(solicitudId, token, page, limit);
 
     if (response.success) {
-      setValidations(response.data || []);
+      const loadedValidations = response.data || [];
+      setValidations(loadedValidations);
       setCurrentPage(page); // Update currentPage state to match loaded page
       if (response.pagination) {
         setPagination(response.pagination);
       }
-      // Expand first validation by default
-      if (response.data && response.data.length > 0) {
-        setExpandedValidation(response.data[0].id);
+      // Expand last validation by default (newest one, as API returns data in ascending order)
+      // Only expand on initial load to avoid overriding manual expansion
+      // When loading after a new validation is created, the expansion is handled in handleFormSubmit
+      if (loadedValidations.length > 0 && isInitialLoad) {
+        const lastValidation = loadedValidations[loadedValidations.length - 1];
+        setExpandedValidation(lastValidation.id);
       }
+      // Don't set expandedValidation when isInitialLoad is false - let the caller handle it
+      
+      if (isInitialLoad) {
+        setInitialLoading(false);
+      }
+      
+      return loadedValidations;
     } else {
       setError(response.error || 'Error al cargar las validaciones');
-    }
-
-    if (isInitialLoad) {
-      setInitialLoading(false);
+      if (isInitialLoad) {
+        setInitialLoading(false);
+      }
+      return null;
     }
   }, [solicitudId, token, limit]);
 
@@ -61,6 +74,28 @@ function VerSolicitud() {
       loadValidations(1, true); // Pass page 1 and true for initial load
     }
   }, [solicitudId, token, loadValidations]);
+
+  // Track when we're expecting a new validation to be added
+  const expectingNewValidationRef = useRef(false);
+
+  // Auto-expand last validation when validations change and we're expecting a new one
+  useEffect(() => {
+    if (expectingNewValidationRef.current && validations.length > 0) {
+      const lastValidation = validations[validations.length - 1];
+      
+      // Expand the last validation
+      setExpandedValidation(lastValidation.id);
+      expectingNewValidationRef.current = false;
+      
+      // Scroll after a delay to ensure DOM is updated with the expanded state
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToLatestValidation(lastValidation.id, null, 100);
+        }, 400);
+      });
+    }
+  }, [validations, scrollToLatestValidation]);
+
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.total_pages) {
@@ -87,14 +122,25 @@ function VerSolicitud() {
     const response = await cropService.validateCrop(latitude, longitude, cropCode, token, solicitudId, descriptor);
 
     if (response.success) {
-      // Reload validations to show the new one (go to page 1 to see the new validation)
-      setCurrentPage(1);
-      await loadValidations(1, false);
-      
-      // Scroll to results
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      // Reload validations to show the new one (go to last page to see the new validation)
+      // Since API returns data in ascending order, newest is at the end
+      // First, get pagination info to find the last page
+      const paginationResponse = await cropService.searchValidations(solicitudId, token, 1, limit);
+      if (paginationResponse.success && paginationResponse.pagination) {
+        const totalPages = paginationResponse.pagination.total_pages;
+        
+        // Go to the last page where the newest validation will be
+        setCurrentPage(totalPages);
+        
+        // Set flag to indicate we're expecting a new validation
+        expectingNewValidationRef.current = true;
+        
+        // Load validations - the useEffect will handle expansion and scrolling when validations update
+        await loadValidations(totalPages, false);
+      } else {
+        // Fallback: just reload page 1
+        await loadValidations(1, false);
+      }
 
       setLoading(false);
       return true; // Return true to indicate success and clear form
@@ -218,7 +264,12 @@ function VerSolicitud() {
               const resultado = validation.json_resultado?.[0] || {};
               
               return (
-                <div key={validation.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div 
+                  key={validation.id} 
+                  data-validation-item
+                  ref={getValidationRef(validation.id)}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200"
+                >
                   <button
                     onClick={() => toggleValidation(validation.id)}
                     className="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"

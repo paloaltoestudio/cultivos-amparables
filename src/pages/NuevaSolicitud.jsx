@@ -4,11 +4,13 @@ import useAuthStore from '../store/authStore';
 import FormAndMapSection from '../components/FormAndMapSection';
 import LoadingOverlay from '../components/LoadingOverlay';
 import MassiveUploadSection from '../components/MassiveUploadSection';
+import { useValidationScroll } from '../hooks/useValidationScroll';
 
 function NuevaSolicitud() {
   const { token } = useAuthStore((state) => ({ token: state.token }));
   const formRef = useRef(null);
   const resultsRef = useRef(null);
+  const { scrollToLatestValidation, getValidationRef } = useValidationScroll();
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,12 +64,9 @@ function NuevaSolicitud() {
         timestamp: new Date(),
       };
       setValidations([...validations, newValidation]);
-      setExpandedValidation(newValidation.id);
-
-      // Scroll to results section after a short delay to ensure DOM is updated
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      
+      // Scroll to the newest validation using the centralized hook
+      scrollToLatestValidation(newValidation.id, setExpandedValidation, 200);
 
       setLoading(false);
       return true; // Return true to indicate success and clear form
@@ -146,7 +145,12 @@ function NuevaSolicitud() {
           
           <div className="space-y-3">
             {validations.map((validation, index) => (
-              <div key={validation.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div 
+                key={validation.id}
+                data-validation-item
+                ref={getValidationRef(validation.id)}
+                className="bg-white rounded-lg shadow-sm border border-gray-200"
+              >
                 <button
                   onClick={() => toggleValidation(validation.id)}
                   className="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"

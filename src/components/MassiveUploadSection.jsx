@@ -67,7 +67,7 @@ function MassiveUploadSection({ token, solicitudId = null, onUploadSuccess = nul
       token,
       solicitudId,
       'Test', // descriptor
-      null // email - can be added later if needed
+      'david@paloaltoestudio.com'
     );
 
     if (response.success) {
