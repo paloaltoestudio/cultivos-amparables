@@ -6,6 +6,22 @@ import FormAndMapSection from '../components/FormAndMapSection';
 import LoadingOverlay from '../components/LoadingOverlay';
 import MassiveUploadSection from '../components/MassiveUploadSection';
 import { useValidationScroll } from '../hooks/useValidationScroll';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+const RESULTS_SKELETON_COUNT = 5;
+
+function formatConsultaDate(creado) {
+  if (!creado) return null;
+  const date = new Date(creado.replace(' ', 'T'));
+  if (Number.isNaN(date.getTime())) return null;
+  const day = date.getDate();
+  const month = MESES[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} de ${month} de ${year}`;
+}
 
 function VerSolicitud() {
   const { solicitudId } = useParams();
@@ -20,6 +36,8 @@ function VerSolicitud() {
   const [error, setError] = useState('');
   const [validations, setValidations] = useState([]);
   const [expandedValidation, setExpandedValidation] = useState(null);
+  const [formSectionOpen, setFormSectionOpen] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [pagination, setPagination] = useState({
@@ -34,6 +52,8 @@ function VerSolicitud() {
     
     if (isInitialLoad) {
       setInitialLoading(true);
+    } else {
+      setPageLoading(true);
     }
     setError('');
 
@@ -46,17 +66,17 @@ function VerSolicitud() {
       if (response.pagination) {
         setPagination(response.pagination);
       }
-      // Expand last validation by default (newest one, as API returns data in ascending order)
-      // Only expand on initial load to avoid overriding manual expansion
-      // When loading after a new validation is created, the expansion is handled in handleFormSubmit
+      // On initial load: expand first result. When user adds a new validation, expansion is handled in the useEffect below.
       if (loadedValidations.length > 0 && isInitialLoad) {
-        const lastValidation = loadedValidations[loadedValidations.length - 1];
-        setExpandedValidation(lastValidation.id);
+        const firstValidation = loadedValidations[0];
+        setExpandedValidation(firstValidation.id);
       }
       // Don't set expandedValidation when isInitialLoad is false - let the caller handle it
       
       if (isInitialLoad) {
         setInitialLoading(false);
+      } else {
+        setPageLoading(false);
       }
       
       return loadedValidations;
@@ -64,6 +84,8 @@ function VerSolicitud() {
       setError(response.error || 'Error al cargar las validaciones');
       if (isInitialLoad) {
         setInitialLoading(false);
+      } else {
+        setPageLoading(false);
       }
       return null;
     }
@@ -105,8 +127,11 @@ function VerSolicitud() {
     }
   };
 
-  const scrollToTop = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToForm = () => {
+    setFormSectionOpen(true);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const handleFormSubmit = async ({ latitude, longitude, cropCode }) => {
@@ -156,7 +181,7 @@ function VerSolicitud() {
 
   const handleNewValidation = () => {
     setError('');
-    scrollToTop();
+    scrollToForm();
   };
 
   const toggleValidation = (id) => {
@@ -165,13 +190,31 @@ function VerSolicitud() {
 
   if (initialLoading) {
     return (
-      <div className="p-4 sm:p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="relative w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-green-600 rounded-full border-t-transparent animate-spin"></div>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-3 sm:mb-4">
+          <Skeleton width={140} height={14} />
+        </div>
+        <div className="mb-4 sm:mb-6 flex justify-between items-center">
+          <Skeleton width={220} height={32} />
+          <Skeleton width={140} height={36} borderRadius={9999} />
+        </div>
+        <div className="mb-6">
+          <Skeleton width={120} height={28} className="mb-4" />
+          <div className="space-y-3">
+            {Array.from({ length: RESULTS_SKELETON_COUNT }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
+                <Skeleton height={24} className="mb-2" />
+                <Skeleton height={20} width="60%" />
+              </div>
+            ))}
           </div>
-          <p className="text-sm sm:text-base text-gray-600">Cargando solicitud...</p>
+          <div className="mt-6 flex justify-between items-center">
+            <Skeleton width={180} height={32} />
+            <div className="flex gap-2">
+              <Skeleton width={80} height={36} borderRadius={9999} />
+              <Skeleton width={80} height={36} borderRadius={9999} />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -213,55 +256,110 @@ function VerSolicitud() {
             ? validations[0].descriptor 
             : `Solicitud ${solicitudId?.substring(0, 8) || 'N/A'}`}
         </h1>
-        <button
-          onClick={() => navigate('/mis-solicitudes')}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors text-sm"
-        >
-          <svg
-            className="w-4 h-4 sm:w-5 sm:h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/mis-solicitudes')}
+            className="flex items-center gap-2 py-2 text-gray-700 hover:text-gray-900 transition-colors text-sm"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          <span className="text-xs sm:text-sm font-medium">Volver al listado</span>
-        </button>
+            <svg
+              className="w-4 h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            <span className="text-xs sm:text-sm font-medium">Volver al listado</span>
+          </button>
+        </div>
       </div>
 
-      {/* Form and Map Section */}
-      <FormAndMapSection
-        ref={formRef}
-        onSubmit={handleFormSubmit}
-        loading={loading}
-        error={error}
-        onErrorChange={setError}
-        token={token}
-      />
+      {/* Form section - hidden by default; open when user clicks "Nueva solicitud" or "Nueva validación" */}
+      <div ref={formRef} className="mb-6">
+        {formSectionOpen ? (
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Nueva validación</h2>
+              <button
+                type="button"
+                onClick={() => setFormSectionOpen(false)}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
+                Ocultar
+              </button>
+            </div>
+            <FormAndMapSection
+              ref={null}
+              onSubmit={handleFormSubmit}
+              loading={loading}
+              error={error}
+              onErrorChange={setError}
+              token={token}
+            />
+            {/* Consulta masiva - inside Nueva validación so it hides with the section */}
+            <MassiveUploadSection
+              token={token}
+              solicitudId={solicitudId}
+              onUploadSuccess={() => {
+                setCurrentPage(1);
+                loadValidations(1, false);
+              }}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={scrollToForm}
+            className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva solicitud
+          </button>
+        )}
+      </div>
 
-      {/* Massive Upload Section */}
-      <MassiveUploadSection
-        token={token}
-        solicitudId={solicitudId}
-        onUploadSuccess={() => {
-          setCurrentPage(1);
-          loadValidations(1, false);
-        }}
-      />
-
-      {/* Results Section */}
-      {validations.length > 0 && (
+      {/* Results Section - shown first to drive user to results */}
+      {(validations.length > 0 || pageLoading) && (
         <div ref={resultsRef} className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Resultados</h2>
           
+          {pageLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: RESULTS_SKELETON_COUNT }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex justify-between items-center">
+                    <Skeleton height={24} width={200} />
+                    <Skeleton height={20} width={20} circle />
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                    <Skeleton height={18} width="90%" />
+                    <Skeleton height={18} width="70%" />
+                    <Skeleton height={18} width="80%" />
+                  </div>
+                </div>
+              ))}
+              <div className="mt-6 flex justify-between items-center">
+                <Skeleton width={200} height={32} />
+                <div className="flex gap-2">
+                  <Skeleton width={90} height={36} borderRadius={9999} />
+                  <Skeleton width={90} height={36} borderRadius={9999} />
+                </div>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="space-y-3">
             {validations.map((validation, index) => {
               const resultado = validation.json_resultado?.[0] || {};
+              const dateLabel = formatConsultaDate(validation.creado);
+              const consultaLabel = dateLabel ? `Consulta ${dateLabel}` : `Consulta ${(currentPage - 1) * limit + index + 1}`;
               
               return (
                 <div 
@@ -275,7 +373,7 @@ function VerSolicitud() {
                     className="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className="font-medium text-gray-800">
-                      Consulta {index + 1}
+                      {consultaLabel}
                     </span>
                     <svg
                       className={`w-5 h-5 text-gray-500 transition-transform ${
@@ -350,8 +448,8 @@ function VerSolicitud() {
             })}
           </div>
 
-          {/* Pagination Controls */}
-          {pagination.total_pages > 1 && (
+          {/* Pagination Controls - only when not loading page */}
+          {!pageLoading && pagination.total_pages > 1 && (
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
               <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                 Mostrando {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, pagination.total)} de {pagination.total} validaciones
@@ -464,17 +562,24 @@ function VerSolicitud() {
               </div>
             </div>
           )}
+          </>
+          )}
         </div>
       )}
+
+      
 
       {/* Nueva Validación Button */}
       {validations.length > 0 && (
         <div className="flex justify-center mt-6">
           <button
-            onClick={handleNewValidation}
-            className="px-6 py-3 bg-gray-300 text-gray-800 rounded-full text-base font-medium transition-colors hover:bg-gray-400"
+            onClick={scrollToForm}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
           >
-            Nueva validación
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva solicitud
           </button>
         </div>
       )}

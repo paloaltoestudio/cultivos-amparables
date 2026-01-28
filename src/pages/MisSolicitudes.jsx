@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cropService } from '../services/cropService';
 import useAuthStore from '../store/authStore';
-import LoadingOverlay from '../components/LoadingOverlay';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
+const LIST_SKELETON_COUNT = 5;
 
 function MisSolicitudes() {
   const navigate = useNavigate();
@@ -88,14 +91,6 @@ function MisSolicitudes() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <LoadingOverlay show={loading} title="Cargando solicitudes" />
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Breadcrumbs */}
@@ -112,14 +107,43 @@ function MisSolicitudes() {
       </div>
 
       {/* Error Message */}
-      {error && (
+      {error && !loading && (
         <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
           {error}
         </div>
       )}
 
-      {/* Applications List */}
-      {applications.length > 0 ? (
+      {/* Applications List or Skeleton */}
+      {loading ? (
+        <>
+          <div className="space-y-3">
+            {Array.from({ length: LIST_SKELETON_COUNT }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6"
+              >
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <Skeleton height={22} width="70%" className="mb-2" />
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
+                      <Skeleton height={16} width={140} />
+                      <Skeleton height={16} width={120} />
+                    </div>
+                  </div>
+                  <Skeleton height={20} width={20} circle />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+            <Skeleton width={220} height={24} />
+            <div className="flex gap-2">
+              <Skeleton width={90} height={36} borderRadius={9999} />
+              <Skeleton width={90} height={36} borderRadius={9999} />
+            </div>
+          </div>
+        </>
+      ) : applications.length > 0 ? (
         <>
           <div className="space-y-3">
             {applications.map((application) => (

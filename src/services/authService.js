@@ -18,6 +18,7 @@ export const authService = {
           token: data.Token,
           userId: data.id,
           nombre: data.nombre || '',
+          exp: data.exp ?? null, // Unix timestamp (seconds) when token expires
         };
       } else {
         return {

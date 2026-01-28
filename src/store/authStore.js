@@ -3,15 +3,21 @@ import { persist } from 'zustand/middleware';
 
 const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       userId: null,
       nombre: null,
-      login: (token, userId, nombre) => {
-        set({ token, userId, nombre });
+      exp: null, // Unix timestamp (seconds) when token expires
+      login: (token, userId, nombre, exp) => {
+        set({ token, userId, nombre, exp: exp ?? null });
       },
       logout: () => {
-        set({ token: null, userId: null, nombre: null });
+        set({ token: null, userId: null, nombre: null, exp: null });
+      },
+      isTokenExpired: () => {
+        const { exp } = get();
+        if (exp == null) return false;
+        return Date.now() / 1000 > exp;
       },
     }),
     {
@@ -20,10 +26,13 @@ const useAuthStore = create(
   )
 );
 
-// Selector for isAuthenticated
+// Selector for isAuthenticated (false if no token or token expired)
 export const useIsAuthenticated = () => {
   const token = useAuthStore((state) => state.token);
-  return !!token;
+  const exp = useAuthStore((state) => state.exp);
+  if (!token) return false;
+  if (exp != null && Date.now() / 1000 > exp) return false;
+  return true;
 };
 
 export default useAuthStore;

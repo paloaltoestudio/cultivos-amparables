@@ -1,15 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 import useAuthStore from '../store/authStore';
 
+const TOKEN_EXPIRATION_CHECK_MS = 60 * 1000; // Check every minute
+
 function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuthStore((state) => state.logout);
+  const isTokenExpired = useAuthStore((state) => state.isTokenExpired);
   const nombre = useAuthStore((state) => state.nombre);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // End session and redirect to login when token expires
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isTokenExpired()) {
+        logout();
+        navigate('/login', { replace: true });
+      }
+    }, TOKEN_EXPIRATION_CHECK_MS);
+    return () => clearInterval(interval);
+  }, [isTokenExpired, logout, navigate]);
 
   const handleLogout = () => {
     logout();

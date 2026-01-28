@@ -19,7 +19,7 @@ function Login() {
     const result = await authService.login(email, password);
 
     if (result.success) {
-      login(result.token, result.userId, result.nombre);
+      login(result.token, result.userId, result.nombre, result.exp);
       navigate('/dashboard');
     } else {
       setError(result.error || 'Credenciales inválidas');
