@@ -5,10 +5,11 @@ const BASE_URL = import.meta.env.VITE_CROP_API_URL;
 export const cropService = {
   async validateCrop(latitude, longitude, cropCode, token, solicitudId = null, descriptor = 'Test') {
     try {
+      // cropCode is the catalog item id (e.g. UUID string from execute-catalog)
       const requestBody = {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
-        crop_code: parseInt(cropCode),
+        crop_code: typeof cropCode === 'number' ? cropCode : String(cropCode),
         descriptor: descriptor || 'Test',
       };
 

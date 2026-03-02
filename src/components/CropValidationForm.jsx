@@ -144,8 +144,13 @@ function CropValidationForm({
       const response = await catalogService.getCatalog(CATALOG_IDS.CROP, token);
 
       if (response.success && response.data) {
-        // Sort crops by code for better UX
-        const sortedCrops = [...response.data].sort((a, b) => a.codigo - b.codigo);
+        // Catalog returns { id, nombre }. Filter valid items and sort by name.
+        const validCrops = (response.data || []).filter(
+          (c) => c != null && c.id != null && String(c.id).trim() !== ''
+        );
+        const sortedCrops = [...validCrops].sort((a, b) =>
+          String(a.nombre ?? '').localeCompare(String(b.nombre ?? ''))
+        );
         setCrops(sortedCrops);
       } else {
         setCatalogError(response.error || 'Error al cargar el catálogo de cultivos');
@@ -247,9 +252,8 @@ function CropValidationForm({
       }
     }
 
-    const numCropCode = parseInt(cropCode);
-    if (isNaN(numCropCode)) {
-      const errorMsg = 'Por favor, ingrese un código de cultivo válido';
+    if (!cropCode || String(cropCode).trim() === '') {
+      const errorMsg = 'Por favor, seleccione un cultivo';
       setError(errorMsg);
       if (onErrorChange) {
         onErrorChange(errorMsg);
@@ -257,11 +261,11 @@ function CropValidationForm({
       return;
     }
 
-    // Call parent's onSubmit callback with validated data
+    // Call parent's onSubmit callback with validated data (cropCode is catalog item id, e.g. UUID)
     const result = await onSubmit({
       latitude: finalLatitude,
       longitude: finalLongitude,
-      cropCode: numCropCode,
+      cropCode: String(cropCode).trim(),
     });
 
     // If onSubmit returns true, clear the form
@@ -543,16 +547,16 @@ function CropValidationForm({
             ) : (
               <Select
                 id="cropCode"
-                value={crops.find(crop => crop.codigo.toString() === cropCode) ? {
+                value={crops.find(crop => String(crop?.id) === cropCode) ? {
                   value: cropCode,
-                  label: crops.find(crop => crop.codigo.toString() === cropCode)?.cultivo || ''
+                  label: crops.find(crop => String(crop?.id) === cropCode)?.nombre ?? ''
                 } : null}
                 onChange={(selectedOption) => {
-                  setCropCode(selectedOption ? selectedOption.value.toString() : '');
+                  setCropCode(selectedOption ? String(selectedOption.value) : '');
                 }}
                 options={crops.map(crop => ({
-                  value: crop.codigo.toString(),
-                  label: crop.cultivo
+                  value: String(crop?.id ?? ''),
+                  label: crop?.nombre ?? ''
                 }))}
                 placeholder="Seleccione un cultivo"
                 isSearchable={true}
