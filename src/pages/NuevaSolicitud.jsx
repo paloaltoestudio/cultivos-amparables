@@ -173,31 +173,40 @@ function NuevaSolicitud() {
                 {expandedValidation === validation.id && (
                   <div className="px-6 pb-6 pt-4 border-t border-gray-200">
                     <div className="space-y-4">
-                      {Object.entries(validation.resultado).map(([key, value]) => (
-                        <div key={key} className="pb-3 last:pb-0">
-                          {key.includes('?') ? (
-                            // Question format
-                            <div>
-                              <div className="text-sm font-medium text-gray-700 mb-1">
-                                {key}
+                      {Object.entries(validation.resultado || {}).map(([key, value]) => {
+                        // React cannot render objects; show primitives or format objects/arrays
+                        const displayValue =
+                          value === null || value === undefined
+                            ? '—'
+                            : typeof value === 'object' && value !== null && !(value instanceof Date)
+                            ? typeof value.mensaje === 'string'
+                              ? value.mensaje + (value.codigo_DANE ? ` (código DANE: ${value.codigo_DANE})` : '')
+                              : JSON.stringify(value)
+                            : String(value);
+                        return (
+                          <div key={key} className="pb-3 last:pb-0">
+                            {key.includes('?') ? (
+                              <div>
+                                <div className="text-sm font-medium text-gray-700 mb-1">
+                                  {key}
+                                </div>
+                                <div className="text-base text-gray-800 font-semibold">
+                                  {displayValue}
+                                </div>
                               </div>
-                              <div className="text-base text-gray-800 font-semibold">
-                                {value}
+                            ) : (
+                              <div>
+                                <div className="text-sm font-medium text-gray-600 mb-1">
+                                  {key}
+                                </div>
+                                <div className="text-base text-gray-800 font-semibold">
+                                  {displayValue}
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            // Label format
-                            <div>
-                              <div className="text-sm font-medium text-gray-600 mb-1">
-                                {key}
-                              </div>
-                              <div className="text-base text-gray-800 font-semibold">
-                                {value}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
