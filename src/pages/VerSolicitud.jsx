@@ -414,32 +414,40 @@ function VerSolicitud() {
                           </div>
                         </div> */}
 
-                        {/* Validation Results */}
-                        {Object.entries(resultado).map(([key, value]) => (
-                          <div key={key} className="pb-3 last:pb-0">
-                            {key.includes('?') ? (
-                              // Question format
-                              <div>
-                                <div className="text-sm font-medium text-gray-700 mb-1">
-                                  {key}
+                        {/* Validation Results - value can be string, number, or object (e.g. { mensaje, codigo_DANE }) */}
+                        {Object.entries(resultado).map(([key, value]) => {
+                          const displayValue =
+                            value === null || value === undefined
+                              ? '—'
+                              : typeof value === 'object' && value !== null && !(value instanceof Date)
+                              ? typeof value.mensaje === 'string'
+                                ? value.mensaje + (value.codigo_DANE ? ` (código DANE: ${value.codigo_DANE})` : '')
+                                : JSON.stringify(value)
+                              : String(value);
+                          return (
+                            <div key={key} className="pb-3 last:pb-0">
+                              {key.includes('?') ? (
+                                <div>
+                                  <div className="text-sm font-medium text-gray-700 mb-1">
+                                    {key}
+                                  </div>
+                                  <div className="text-base text-gray-800 font-semibold">
+                                    {displayValue}
+                                  </div>
                                 </div>
-                                <div className="text-base text-gray-800 font-semibold">
-                                  {value}
+                              ) : (
+                                <div>
+                                  <div className="text-sm font-medium text-gray-600 mb-1">
+                                    {key}
+                                  </div>
+                                  <div className="text-base text-gray-800 font-semibold">
+                                    {displayValue}
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
-                              // Label format
-                              <div>
-                                <div className="text-sm font-medium text-gray-600 mb-1">
-                                  {key}
-                                </div>
-                                <div className="text-base text-gray-800 font-semibold">
-                                  {value}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
